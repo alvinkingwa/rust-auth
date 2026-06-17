@@ -47,6 +47,7 @@ pub struct AuthResponse {
     pub user: UserResponse,
 }
 
+
 #[axum::debug_handler]
 pub async fn set_password(
     State(state): State<AppState>,
@@ -60,7 +61,8 @@ pub async fn set_password(
         .await
         .map_err(|_| AppError::InvalidCredentials)?;
 
-    let valid = verify(&body.temp_password, &user.password)?;
+    let stored_password = user.password.as_ref().ok_or(AppError::InvalidCredentials)?;
+    let valid = verify(&body.temp_password, stored_password)?;
     if !valid {
         return Err(AppError::InvalidCredentials);
     }
@@ -71,7 +73,6 @@ pub async fn set_password(
         "message":"Password set successfully. You can sign in."
     })))
 }
-
 pub async fn forgot_password(
     State(state): State<AppState>,
     Json(body): Json<ForgotPasswordRequest>,
@@ -144,7 +145,8 @@ pub async fn sign_in(
         .await
         .map_err(|_| AppError::InvalidCredentials)?;
 
-    let valid = verify(&body.password, &user.password)?;
+    let stored_password = user.password.as_ref().ok_or(AppError::InvalidCredentials)?;
+    let valid = verify(&body.password, stored_password)?;
     if !valid {
         return Err(AppError::InvalidCredentials);
     }

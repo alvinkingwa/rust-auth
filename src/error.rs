@@ -22,10 +22,9 @@ pub enum AppError {
     #[error("Email already exists")]
     EmailTaken,
 
-    #[error("Username already exists")]
-    UsernameTaken,
 
-    #[error("Missing required information")]
+
+    #[error("Incorrect email or password")]
     InvalidCredentials,
     
     #[error("password has to be at least 8 characters long")]
@@ -42,7 +41,6 @@ impl IntoResponse for AppError {
             AppError::Bcrypt(_) => (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()),
             AppError::Jwt(_) => (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()),
             AppError::EmailTaken => (StatusCode::CONFLICT, self.to_string()),
-            AppError::UsernameTaken => (StatusCode::CONFLICT, self.to_string()),
             AppError::InvalidCredentials => (StatusCode::UNAUTHORIZED, self.to_string()),
             AppError::InvalidPassword => (StatusCode::UNAUTHORIZED, self.to_string()),
             AppError::NotFound => (StatusCode::NOT_FOUND, self.to_string()),

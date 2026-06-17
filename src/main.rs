@@ -3,6 +3,8 @@ mod jwt;
 mod mailer;
 mod models;
 mod routes;
+mod google_auth;
+
 
 use axum::{
     Router, middleware,
@@ -13,11 +15,12 @@ use std::env;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
+use google_auth::{google_login, google_callback};
 use routes::{
     auth::{forgot_password, reset_password, set_password, sign_in, sign_up},
     protected::{me, require_auth},
 };
+
 
 #[derive(Clone)]
 pub struct AppState {
@@ -56,6 +59,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/auth/set-password", post(set_password))
         .route("/auth/forgot-password", post(forgot_password))
         .route("/auth/reset-password", post(reset_password))
+       .route("/auth/google", get(google_login))
+.route("/auth/google/callback", get(google_callback))
         .route(
             "/me",
             get(me).route_layer(middleware::from_fn_with_state(state.clone(), require_auth)),

@@ -11,7 +11,8 @@ pub struct User {
     pub id: Uuid,
     pub username: String,
     pub email: String,
-    pub password: String,
+    pub password: Option<String>,
+    pub google_id: Option<String>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -72,7 +73,7 @@ impl PasswordResetToken {
         .await?;
 
         Ok(reset_token)
-    }  // FIXED: was missing closing brace
+    }
 
     pub async fn find_valid(pool: &PgPool, token: &str) -> Result<Self, AppError> {
         sqlx::query_as::<_, PasswordResetToken>(
@@ -92,7 +93,7 @@ impl PasswordResetToken {
             .await?;
         Ok(())
     }
-}  // FIXED: closes impl PasswordResetToken
+}
 
 impl User {
     pub async fn create(
@@ -143,7 +144,7 @@ impl User {
     }
 
     pub async fn reset_password(
-        pool: &PgPool,  
+        pool: &PgPool,
         email: &str,
         hashed_password: &str,
     ) -> Result<Self, AppError> {
@@ -155,5 +156,36 @@ impl User {
         .fetch_optional(pool)
         .await?
         .ok_or(AppError::NotFound)
+    }
+
+    // MOVED: now inside impl User so Self works
+    // also FIXED: added missing .await? and Ok(user)
+    pub async fn find_or_create_google_user(
+        pool: &PgPool,
+        google_id: &str,
+        email: &str,
+        username: &str,
+    ) -> Result<Self, AppError> {
+        let existing = sqlx::query_as::<_, User>("SELECT * FROM users WHERE google_id = $1")
+            .bind(google_id)
+            .fetch_optional(pool)
+            .await?;
+
+        if let Some(user) = existing {
+            return Ok(user);
+        }
+
+        let user = sqlx::query_as::<_, User>(
+            "INSERT INTO users (email, username, google_id)
+             VALUES ($1, $2, $3)
+             RETURNING *"
+        )
+        .bind(email)
+        .bind(username)
+        .bind(google_id)
+        .fetch_one(pool)
+        .await?;  
+
+        Ok(user) 
     }
 }
