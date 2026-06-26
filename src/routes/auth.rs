@@ -8,7 +8,7 @@ use crate::{
     error::AppError,
     jwt::create_token,
     mailer::{send_welcome_email,send_forgot_password_email},
-    models::{PasswordResetToken, User, UserResponse, generate_random_password},
+    models::{PasswordResetToken,AuthResponse , User, UserResponse, generate_random_password},
 };
 
 #[derive(Debug,Deserialize)]
@@ -41,11 +41,7 @@ pub struct SignInRequest {
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
-pub struct AuthResponse {
-    pub token: String,
-    pub user: UserResponse,
-}
+
 
 
 #[axum::debug_handler]

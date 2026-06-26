@@ -34,6 +34,15 @@ pub struct UserResponse {
     pub created_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct AuthResponse {
+    pub token: String,
+    pub user: UserResponse,
+}
+
+
+
+
 impl From<User> for UserResponse {
     fn from(u: User) -> Self {
         UserResponse {
